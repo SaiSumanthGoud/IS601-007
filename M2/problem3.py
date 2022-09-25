@@ -10,6 +10,15 @@ def process_array(num, arr):
     print("\nPositive Output:\n")
     # TODO add new code here to print the desired result
 
+    # loop to iterate through the array and update it with absolute value(+ve value) using abs() function. 
+    for i in range(len(arr)):
+
+        # checking data type to preserve it in the output 
+        if type(arr[i]) == str:
+            arr[i] = str(abs(int(arr[i])))
+        else:
+            arr[i] = abs(arr[i])
+    print(arr)
 
 print("Problem 3")
 process_array(1, a1)
