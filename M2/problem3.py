@@ -15,7 +15,7 @@ def process_array(num, arr):
 
         # checking data type to preserve it in the output 
         if type(arr[i]) == str:
-            arr[i] = str(abs(int(arr[i])))
+            arr[i] = arr[i].replace("-", "")
         else:
             arr[i] = abs(arr[i])
     print(arr)
