@@ -1,6 +1,6 @@
 <table><tr><td> <em>Assignment: </em> IS601 - Mini Project 1 - IceCream</td></tr>
 <tr><td> <em>Student: </em> Sai Sumanth Goud Parakala (sp2927)</td></tr>
-<tr><td> <em>Generated: </em> 23/10/2022 15:41:35</td></tr>
+<tr><td> <em>Generated: </em> 23/10/2022 21:21:51</td></tr>
 <tr><td> <em>Grading Link: </em> <a rel="noreferrer noopener" href="https://learn.ethereallab.app/homework/IS601-007-F22/is601-mini-project-1-icecream/grade/sp2927" target="_blank">Grading</a></td></tr></table>
 <table><tr><td> <em>Instructions: </em> <ol><li>Create a new branch per the desired branch name below</li><li>Add the baseline files from the following link:&nbsp;<a href="https://gist.github.com/MattToegel/17d0ac833a03580d010ad92e83fc4216">https://gist.github.com/MattToegel/17d0ac833a03580d010ad92e83fc4216</a>&nbsp;</li><li>Put them into a subfolder in your repository folder (I called my folder IcecreamMachine)</li><li>git add .</li><li>git commit -m "baseline files"</li><li>git push origin (name of desired branch below)</li><li>You can go to github and open the pull request for evidence capturing later (don't close/merge the pull request until you're done with the assignment)</li><li>Do the below tasks and fill in the below entries</li><ol><li>git add/commit after any significant changes to build up history</li></ol><li>Save the input and generate the submission markdown file (copy to clipboard or download the file)</li><li>Name it something relevant to the assignment if it's not named already</li><li>git add the submission file</li><li>git commit the submission file</li><li>git push the submission file</li><li>Complete the pull request to dev</li><li>Create a pull request from dev to prod</li><li>Go to the prod branch on github, navigate to the submission file</li><li>Paste that link to Canvas</li></ol></td></tr></table>
 <table><tr><td> <em>Deliverable 1: </em> Code Changes - Add the calculate_cost() implementation </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="http://via.placeholder.com/400x120/009955/fff?text=Complete"></td></tr>
@@ -24,20 +24,23 @@
 <tr><td> <em>Caption:</em> <p>Shows how the NeedsCleaningException is handled with proper user feedback and continued program<br>flow. New input() process is highlighted<br></p>
 </td></tr>
 <tr><td><img width="768px" src="https://user-images.githubusercontent.com/113568928/197403263-19c673c6-6659-4cb8-98c5-a3d353fe50c2.png"/></td></tr>
-<tr><td> <em>Caption:</em> <p>Shows how the various InvalidChoiceExceptions are handled with proper user feedback and continued<br>program flow<br></p>
+<tr><td> <em>Caption:</em> <p>Shows how the various InvalidChoiceException are handled with proper user feedback and continued<br>program flow<br></p>
 </td></tr>
 <tr><td><img width="768px" src="https://user-images.githubusercontent.com/113568928/197402342-8fc1cd4c-6f90-4ea8-95d2-393b8e0a6371.png"/></td></tr>
-<tr><td> <em>Caption:</em> <p>Shows how the ExceededRemainingChoicesExceptions is handled for toppings with proper user feedback and<br>continued program flow<br></p>
+<tr><td> <em>Caption:</em> <p>Shows how the ExceededRemainingChoicesException is handled for toppings with proper user feedback and<br>continued program flow<br></p>
 </td></tr>
 <tr><td><img width="768px" src="https://user-images.githubusercontent.com/113568928/197402393-d2399991-b3e8-4609-b2a9-7033a51c4944.png"/></td></tr>
-<tr><td> <em>Caption:</em> <p>Shows how the ExceededRemainingChoicesExceptions is handled for flavors with proper user feedback and<br>continued program flow<br></p>
+<tr><td> <em>Caption:</em> <p>Shows how the ExceededRemainingChoicesException is handled for flavors with proper user feedback and<br>continued program flow<br></p>
 </td></tr>
 <tr><td><img width="768px" src="https://user-images.githubusercontent.com/113568928/197402521-227b0ab4-9ea6-479d-b57f-0ec85cd8d5f7.png"/></td></tr>
 <tr><td> <em>Caption:</em> <p>Shows how the InvalidPaymentException is handled with proper user feedback and continued program<br>flow<br></p>
 </td></tr>
+<tr><td><img width="768px" src="https://user-images.githubusercontent.com/113568928/197429281-faf0187e-51d7-42be-9c43-fe9893034127.png"/></td></tr>
+<tr><td> <em>Caption:</em> <p>Shows how InvalidChoiceException is handled for choosing container with proper user feedback and<br>continued program flow<br></p>
+</td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 2: </em> Summarize each exception handling process</td></tr>
-<tr><td> <em>Response:</em> <ul><li><span style="font-size: 13px;">OutOfStockException is handled by printing a statement that the choice is<br>out of stock and to choose from the available options shown.</span><br></li><li><span style="font-size: 13px;">NeedsCleaningException<br>is handled by letting the user know that "the machine has reached its<br>maximum usage and it needs cleaning before any more ice creams can be<br>made. The user is also asked to confirm if he/she would like to<br>proceed with the cleaning and then continue selecting or else quit.</span></li><li><span style="font-size: 13px;">InvalidChoiceException<br>is handled by&nbsp;prompting the users that their choice is invalid, choose only from<br>the options show below.</span></li><li><span style="font-size: 13px;">ExceededRemainingChoicesExceptions is handled by prompting that the maximum<br>remaining choices has reached, now proceed to the next step. The user will<br>also be moved to the next following step( either topping or pay)<br></span></li><li><span style="font-size:<br>13px;">InvalidPaymentException is handled by prompting that "the amount entered didn't match with the<br>total, please re-enter".&nbsp;<br></span></li></ul><br></td></tr>
+<tr><td> <em>Response:</em> <ul><li><span style="font-size: 13px;">OutOfStockException is handled by printing a statement that the choice is<br>out of stock and to choose from the available options shown.</span><br></li><li><span style="font-size: 13px;">NeedsCleaningException<br>is handled by letting the user know that "the machine has reached its<br>maximum usage and it needs cleaning before any more ice creams can be<br>made. The user is also asked to confirm if he/she would like to<br>proceed with the cleaning and then continue selecting or else quit.</span></li><li><span style="font-size: 13px;">InvalidChoiceException<br>is handled by&nbsp;prompting the users that their choice is invalid, choose only from<br>the options shown below. For choosing the container, the current selection is assigned<br>back to "Container" to maintain the continued program flow.</span></li><li><span style="font-size: 13px;">ExceededRemainingChoicesExceptions is handled<br>by prompting that the maximum remaining choices have been reached, now proceed to<br>the next step. The user will also be moved to the next following<br>step( either topping or pay)<br></span></li><li><span style="font-size: 13px;">InvalidPaymentException is handled by prompting that "the<br>amount entered didn't match with the total, please re-enter".&nbsp;<br></span></li></ul><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 3: </em> Test Cases </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="http://via.placeholder.com/400x120/009955/fff?text=Complete"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Screenshot(s) of test cases per the checklist</td></tr>
@@ -74,7 +77,7 @@
 </table></td></tr>
 <table><tr><td> <em>Deliverable 4: </em> Misc </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="http://via.placeholder.com/400x120/009955/fff?text=Complete"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add pull request for the assignment</td></tr>
-<tr><td> <a rel="noreferrer noopener" target="_blank" href="https://github.com/SaiSumanthGoud/IS601-007/pull/4">https://github.com/SaiSumanthGoud/IS601-007/pull/4</a> </td></tr>
+<tr><td> <a rel="noreferrer noopener" target="_blank" href="https://github.com/SaiSumanthGoud/IS601-007/pull/6">https://github.com/SaiSumanthGoud/IS601-007/pull/6</a> </td></tr>
 <tr><td> <em>Sub-Task 2: </em> Explain any issues/difficulties or something you learned while doing this assignment</td></tr>
 <tr><td> <em>Response:</em> <ul><li>Was facing issues while trying to handle exceptions in the IcecreamExceptions.py file but<br>then figured out that the exceptions have to be handled directly in the<br>code where the exceptions occur.</li><li>Faced a calculation error in the testing file due<br>to a state issue. Resolved it by resetting the state with the reset()<br>function.</li><li>&nbsp;Learned how to handle exceptions and write test cases in python.</li></ul><br></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Screenshots of successful output</td></tr>
