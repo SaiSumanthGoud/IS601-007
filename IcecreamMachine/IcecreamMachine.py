@@ -78,6 +78,8 @@ class IceCreamMachine:
     # 9 - total_icecreams should increment properly after a payment
     
 
+    # UCID: sp2927
+    # Date: 23 Oct 2022
     def pick_container(self, choice):
         for c in self.containers:
             if c.name.lower() == choice.lower():
@@ -88,6 +90,7 @@ class IceCreamMachine:
             raise InvalidChoiceException
         except:
             print(f"\"{choice}\" is an invalid Choice, Choose only from the options below")
+            self.currently_selecting = STAGE.Container
 
     # UCID: sp2927
     # Date: 20 Oct 2022
@@ -158,8 +161,8 @@ class IceCreamMachine:
         self.remaining_uses = self.USES_UNTIL_CLEANING
         
     def handle_container(self, container):
-        self.pick_container(container)
         self.currently_selecting = STAGE.Flavor
+        self.pick_container(container)
 
     def handle_flavor(self, flavor):
         if flavor == "next":
