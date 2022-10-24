@@ -90,6 +90,7 @@ class IceCreamMachine:
             raise InvalidChoiceException
         except:
             print(f"\"{choice}\" is an invalid Choice, Choose only from the options below")
+            # restoring the current selection to "container"
             self.currently_selecting = STAGE.Container
 
     # UCID: sp2927
