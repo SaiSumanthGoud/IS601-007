@@ -19,7 +19,7 @@ jobs:
       # change to the project directory you're deploying
       WORKING_DIRECTORY: flask_sample
     defaults:
-      run:
+      run: 
           working-directory: ${{env.WORKING_DIRECTORY}}
     
     steps:
