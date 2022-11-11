@@ -17,7 +17,7 @@ def add():
                 flash("Created Record", "success")
         except Exception as e:  
             # TODO make this user-friendly
-            flash(e, "danger")
+            flash(str(e), "danger")
 
     return render_template("add_sample.html")
 
@@ -63,7 +63,7 @@ def list():
         if resp.status:
             rows = resp.rows
     except Exception as e:
-        flash(e, "danger")
+        flash(str(e), "danger")
     
     return render_template("list_sample.html", resp=rows)
 
@@ -83,14 +83,14 @@ def edit():
                     flash("Updated record", "success")
             except Exception as e:
                 # TODO make this user-friendly
-                flash(e, "danger")
+                flash(str(e), "danger")
         try:
             result = DB.selectOne("SELECT name, val FROM IS601_Sample WHERE id = %s", id)
             if result.status:
                 row = result.row
         except Exception as e:
             # TODO make this user-friendly
-            flash(e, "danger")
+            flash(str(e), "danger")
     return render_template("edit_sample.html", row=row)
 
 @sample.route("/delete", methods=["GET"])
@@ -105,7 +105,7 @@ def delete():
                 flash("Deleted record", "success")
         except Exception as e:
             # TODO make this user-friendly
-            flash(e, "danger")
+            flash(str(e), "danger")
         # TODO pass along feedback
 
         # remove the id args since we don't need it in the list route
