@@ -8,7 +8,6 @@ sample = Blueprint('sample', __name__, url_prefix='/sample')
 def add():
     k = request.form.get("key", None)
     v = request.form.get("value", None)
-    resp = None
     if k and v:
         try:
             result = DB.insertOne(
