@@ -26,6 +26,9 @@ def register():
                 flash("Successfully registered","success")
         except Exception as e:
             flash(e, "danger")
+            print("exception:", e)
+            import traceback
+            print(traceback.format_exc())
     return render_template("register.html", form=form)
 
 @auth.route("/login", methods=["GET", "POST"])
