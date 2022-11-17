@@ -111,6 +111,8 @@ class DB:
             load_dotenv()
             db_url  = os.environ.get("DB_URL", "")
             print(len(db_url))
+            for k,v in os.environ.items():
+                print(k, v)
             data = re.findall("mysql:\/\/(\w+):(\w+)@([\w\.]+):([\d]+)\/([\w]+)", db_url)
             if len(data) > 0:
                 data = data[0]
