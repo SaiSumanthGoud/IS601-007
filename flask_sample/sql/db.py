@@ -109,7 +109,7 @@ class DB:
             import re
             from dotenv import load_dotenv
             load_dotenv()
-            db_url  = os.environ.get("DB_URL", "")
+            db_url  = os.environ.get("DB_URL")
             data = re.findall("mysql:\/\/(\w+):(\w+)@([\w\.]+):([\d]+)\/([\w]+)", db_url)
             if len(data) > 0:
                 data = data[0]
