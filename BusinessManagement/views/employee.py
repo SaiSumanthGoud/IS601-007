@@ -161,7 +161,7 @@ def edit():
                 UPDATE IS601_MP2_Employees SET first_name = %s, last_name = %s, company_id = %s, email = %s WHERE id = %s
                 """, *data)
                 if result.status:
-                    flash("Updated record", "success")
+                    flash("Updated Employee record", "success")
             except Exception as e:
                 # TODO edit-7 make this user-friendly
                 flash(f" Following exception occured while updating the employee: {str(e)}", "danger")
