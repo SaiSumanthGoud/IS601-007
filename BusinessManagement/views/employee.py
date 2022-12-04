@@ -10,15 +10,15 @@ def search():
     rows = []
     # DO NOT DELETE PROVIDED COMMENTS
     # TODO search-1 retrieve employee id as id, first_name, last_name, email, company_id, company_name using a LEFT JOIN
-    query = "SELECT e.id, e.first_name, e.last_name, e.email, e.company_id, c.name AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE 1=1"
+    query = "SELECT e.id, e.first_name, e.last_name, e.email, e.company_id, IF(c.name is not null, c.name,'N/A') AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE 1=1"
     args = [] # <--- append values to replace %s placeholders
     allowed_columns = ["first_name", "last_name", "email", "company_name"]
 
     allowed_columns_tuples = [(c, c) for c in allowed_columns]
 
     # TODO search-2 get fn, ln, email, company, column, order, limit from request args
-    fn = request.args.get("first_name")
-    ln = request.args.get("last_name")
+    fn = request.args.get("fn")
+    ln = request.args.get("ln")
     email = request.args.get("email")
     company = request.args.get("company")
     column = request.args.get("column")
@@ -79,53 +79,52 @@ def search():
 
 @employee.route("/add", methods=["GET","POST"])
 def add():
-    form = EmployeeForm()
+    form = EmployeeForm(request.form)
     if request.method == "POST":
-        if form.validate_on_submit():
-            # TODO add-1 retrieve form data for first_name, last_name, company, email
-            first_name = form.first_name.data
-            last_name = form.last_name.data
-            email = form.email.data
-            company_id = request.form.get("company", None)
-            # TODO add-2 first_name is required (flash proper error message)
-            if first_name == '':
-                flash("first name is required", "error")
-                return redirect("add")
-            # TODO add-3 last_name is required (flash proper error message)
-            if last_name == '':
-                flash("last name is required", "error")
-                return redirect("add")
-            # TODO add-4 company (may be None)
-            if company_id == '':
-                company_id = None
-            # TODO add-5 email is required (flash proper error message)
-            if email == '':
-                flash("email is required", "error")
-                return redirect("add")
+        # TODO add-1 retrieve form data for first_name, last_name, company, email
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        email = form.email.data
+        company_id = request.form.get("company", None)
+        # TODO add-2 first_name is required (flash proper error message)
+        if first_name == '' or first_name == None:
+            flash("first name is required", "danger")
+            return redirect("add")
+        # TODO add-3 last_name is required (flash proper error message)
+        if last_name == '' or last_name == None:
+            flash("last name is required", "danger")
+            return redirect("add")
+        # TODO add-4 company (may be None)
+        if company_id == '':
+            company_id = None
+        # TODO add-5 email is required (flash proper error message)
+        if email == '' or email == None:
+            flash("email is required", "danger")
+            return redirect("add")
 
-            import re
-            regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
-            if not re.fullmatch(regex, email):
-                flash("Invalid email", "warning")
-                return redirect("add")
-            
-            try:
-                result = DB.insertOne("""
-                INSERT INTO IS601_MP2_Employees (first_name, last_name, email, company_id)
-                            VALUES (%(first_name)s, %(last_name)s, %(email)s, %(company_id)s)
-                            ON DUPLICATE KEY UPDATE first_name=%(first_name)s, last_name = %(last_name)s, email = %(email)s, company_id = %(company_id)s
-                """, {'first_name': first_name, 'last_name': last_name, 'email': email, 'company_id': company_id}) # <-- TODO add-6 add query and add arguments
-                if result.status:
-                    flash("Created Employee Record", "success")
-            except Exception as e:
-                # TODO add-7 make message user friendly
-                print(e)
-                flash(f" Following exception occured while adding the employee record: {str(e)}", "danger")
+        import re
+        regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+        if not re.fullmatch(regex, email):
+            flash("Invalid email", "warning")
+            return redirect("add")
+        
+        try:
+            result = DB.insertOne("""
+            INSERT INTO IS601_MP2_Employees (first_name, last_name, email, company_id)
+                        VALUES (%(first_name)s, %(last_name)s, %(email)s, %(company_id)s)
+                        ON DUPLICATE KEY UPDATE first_name=%(first_name)s, last_name = %(last_name)s, email = %(email)s, company_id = %(company_id)s
+            """, {'first_name': first_name, 'last_name': last_name, 'email': email, 'company_id': company_id}) # <-- TODO add-6 add query and add arguments
+            if result.status:
+                flash("Created Employee Record", "success")
+        except Exception as e:
+            # TODO add-7 make message user friendly
+            print(e)
+            flash(f" Following exception occured while adding the employee record: {str(e)}", "danger")
     return render_template("add_employee.html", form=form)
 
 @employee.route("/edit", methods=["GET", "POST"])
 def edit():
-    form = EmployeeForm()
+    form = EmployeeForm(request.form)
     # TODO edit-1 request args id is required (flash proper error message)
     id = request.args.get("id")
     if id is None:
@@ -133,44 +132,43 @@ def edit():
         return redirect("employee.search")
     else: # TODO update this for TODO edit-1
         if request.method == "POST":
-            if form.validate_on_submit():
-                # TODO edit-1 retrieve form data for first_name, last_name, company, email
-                first_name = form.first_name.data
-                last_name = form.last_name.data
-                email = form.email.data
-                company_id = request.form.get("company", None)
-                # TODO edit-2 first_name is required (flash proper error message)
-                if first_name == '':
-                    flash("first name is required", "error")
-                    return redirect("add")
-                # TODO edit-3 last_name is required (flash proper error message)
-                if last_name == '':
-                    flash("last name is required", "error")
-                    return redirect("add")
-                # TODO edit-4 company may be None
-                if company_id == '':
-                    company_id = None
-                # TODO edit-5 email is required (flash proper error message)
-                if email == '':
-                    flash("email is required", "error")
-                    return redirect("add")
-                
-                data = [first_name, last_name, company_id, email]
-                data.append(id)
-                try:
-                    # TODO edit-6 fill in proper update query
-                    result = DB.update("""
-                    UPDATE IS601_MP2_Employees SET first_name = %s, last_name = %s, company_id = %s, email = %s WHERE id = %s
-                    """, *data)
-                    if result.status:
-                        flash("Updated record", "success")
-                except Exception as e:
-                    # TODO edit-7 make this user-friendly
-                    flash(f" Following exception occured while updating the employee: {str(e)}", "danger")
+            # TODO edit-1 retrieve form data for first_name, last_name, company, email
+            first_name = form.first_name.data
+            last_name = form.last_name.data
+            email = form.email.data
+            company_id = request.form.get("company", None)
+            # TODO edit-2 first_name is required (flash proper error message)
+            if first_name == '' or first_name == None:
+                flash("first name is required", "danger")
+                return redirect("add")
+            # TODO edit-3 last_name is required (flash proper error message)
+            if last_name == '' or last_name == None:
+                flash("last name is required", "danger")
+                return redirect("add")
+            # TODO edit-4 company may be None
+            if company_id == '':
+                company_id = None
+            # TODO edit-5 email is required (flash proper error message)
+            if email == '' or email == None:
+                flash("email is required", "danger")
+                return redirect("add")
+            
+            data = [first_name, last_name, company_id, email]
+            data.append(id)
+            try:
+                # TODO edit-6 fill in proper update query
+                result = DB.update("""
+                UPDATE IS601_MP2_Employees SET first_name = %s, last_name = %s, company_id = %s, email = %s WHERE id = %s
+                """, *data)
+                if result.status:
+                    flash("Updated record", "success")
+            except Exception as e:
+                # TODO edit-7 make this user-friendly
+                flash(f" Following exception occured while updating the employee: {str(e)}", "danger")
         try:
             # TODO edit-8 fetch the updated data (including company_name)
             # company_name should be 'N/A' if the employee isn't assigned to a copany
-            result = DB.selectOne("SELECT e.first_name, e.last_name, e.email, e.company_id, IF(c.name is not null, name,'N/A') AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE e.id = %s", id)
+            result = DB.selectOne("SELECT e.first_name, e.last_name, e.email, e.company_id, c.name AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE e.id = %s", id)
             if result.status:
                 row = result.row
                 form.process(MultiDict(row))

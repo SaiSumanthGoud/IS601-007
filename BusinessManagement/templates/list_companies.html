@@ -62,7 +62,7 @@
             {% for r in rows %}
                 <tr>
                     {% for col, value in r.items() %}
-                        {% if col == 'website' %}
+                        {% if col == 'website' and value != 'N/A' %}
                             <td><a href="{{value}}" class="link-primary" target="_blank">Website</a></td>
                         {% else %}
                             <td>{{value}}</td>

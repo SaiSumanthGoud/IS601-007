@@ -10,7 +10,7 @@ def search():
     # DO NOT DELETE PROVIDED COMMENTS
     # TODO search-1 retrieve id, name, address, city, country, state, zip, website, employee count for the company
     # don't do SELECT *
-    query = "SELECT c.id, c.name, c.address, c.city, c.country, c.state, c.zip, c.website, COUNT(e.id) AS Employees from IS601_MP2_Companies c LEFT JOIN IS601_MP2_Employees e ON e.company_id = c.id WHERE 1=1"
+    query = "SELECT c.id, c.name, c.address, c.city, c.country, c.state, c.zip, IF(c.website is not null, c.website,'N/A') AS website, COUNT(e.id) AS Employees from IS601_MP2_Companies c LEFT JOIN IS601_MP2_Employees e ON e.company_id = c.id WHERE 1=1"
     args = [] # <--- append values to replace %s placeholders
     allowed_columns = ["name", "city", "country", "state"]
 
@@ -73,51 +73,61 @@ def search():
 
 @company.route("/add", methods=["GET","POST"])
 def add():
-    form = CompanyForm()
+    form = CompanyForm(request.form)
     if request.method == "POST":
-        if form.validate_on_submit():
-            # TODO add-1 retrieve form data for name, address, city, state, country, zip, website
-            name = form.name.data
-            address = form.address.data
-            city = form.city.data
-            zipcode = form.zip.data
-            website = form.website.data
-            state = request.form.get("state", None)
-            country = request.form.get("country", None)
-            # TODO add-2 name is required (flash proper error message)
-            # TODO add-3 address is required (flash proper error message)
-            # TODO add-4 city is required (flash proper error message)
-            # TODO add-5 state is required (flash proper error message)
-            if state == '':
-                flash("State is required", "danger")
-                return redirect("add")
-            # TODO add-6 country is required (flash proper error message)
-            if country == '':
-                flash("Country is required", "danger")
-                return redirect("add")
-            # TODO add-7 website is not required
-            
-            has_error = False # use this to control whether or not an insert occurs
-            
+        # TODO add-1 retrieve form data for name, address, city, state, country, zip, website
+        name = form.name.data
+        address = form.address.data
+        city = form.city.data
+        zipcode = form.zip.data
+        website = form.website.data
+        state = request.form.get("state", None)
+        country = request.form.get("country", None)
+        # TODO add-2 name is required (flash proper error message)
+        if name == '' or name == None:
+            flash("Name is required", "danger")
+            return redirect("add")
+        # TODO add-3 address is required (flash proper error message)
+        if address == '' or address == None:
+            flash("Address is required", "danger")
+            return redirect("add")
+        # TODO add-4 city is required (flash proper error message)
+        if city == '' or city == None:
+            flash("City is required", "danger")
+            return redirect("add")
+        # TODO add-5 state is required (flash proper error message)
+        if state == '' or state == None:
+            flash("State is required", "danger")
+            return redirect("add")
+        # TODO add-6 country is required (flash proper error message)
+        if country == '' or country == None:
+            flash("Country is required", "danger")
+            return redirect("add")
+        # TODO add-7 website is not required
+        if website == '':
+            website = None
+        
+        has_error = False # use this to control whether or not an insert occurs
+        
 
-            if not has_error:
-                try:
-                    result = DB.insertOne("""
-                    INSERT INTO IS601_MP2_Companies (name, address, city, country, state, zip, website)
-                                VALUES (%(name)s, %(address)s, %(city)s, %(country)s, %(state)s, %(zip)s, %(website)s)
-                                ON DUPLICATE KEY UPDATE name=%(name)s, address = %(address)s, city = %(city)s, country = %(country)s, state = %(state)s, zip = %(zip)s, website = %(website)s
-                    """, {'name': name, 'address': address, 'city': city, 'country': country, 'state': state, 'zip': zipcode, 'website': website}) # <-- TODO add-8 add query and add arguments
-                    if result.status:
-                        flash("Added Company", "success")
-                except Exception as e:
-                    # TODO add-9 make message user friendly
-                    flash(f" Following exception occured while adding the company: {str(e)}", "danger")
+        if not has_error:
+            try:
+                result = DB.insertOne("""
+                INSERT INTO IS601_MP2_Companies (name, address, city, country, state, zip, website)
+                            VALUES (%(name)s, %(address)s, %(city)s, %(country)s, %(state)s, %(zip)s, %(website)s)
+                            ON DUPLICATE KEY UPDATE name=%(name)s, address = %(address)s, city = %(city)s, country = %(country)s, state = %(state)s, zip = %(zip)s, website = %(website)s
+                """, {'name': name, 'address': address, 'city': city, 'country': country, 'state': state, 'zip': zipcode, 'website': website}) # <-- TODO add-8 add query and add arguments
+                if result.status:
+                    flash("Added Company", "success")
+            except Exception as e:
+                # TODO add-9 make message user friendly
+                flash(f" Following exception occured while adding the company: {str(e)}", "danger")
         
     return render_template("add_company.html", form=form)
 
 @company.route("/edit", methods=["GET", "POST"])
 def edit():
-    form = CompanyForm()
+    form = CompanyForm(request.form)
     # TODO edit-1 request args id is required (flash proper error message)
     id = request.args.get("id")
     if id is None:
@@ -125,41 +135,51 @@ def edit():
         return redirect("company.search")
     else: # TODO update this for TODO edit-1
         if request.method == "POST":
-            if form.validate_on_submit():
-                # TODO edit-2 retrieve form data for name, address, city, state, country, zip, website
-                name = form.name.data
-                address = form.address.data
-                city = form.city.data
-                zipcode = form.zip.data
-                website = form.website.data
-                state = request.form.get("state", None)
-                country = request.form.get("country", None)
-                # TODO edit-3 name is required (flash proper error message)
-                # TODO edit-4 address is required (flash proper error message)
-                # TODO edit-5 city is required (flash proper error message)
-                # TODO edit-6 state is required (flash proper error message)
-                if state == '':
-                    flash("State is required", "danger")
-                    return redirect("edit")
-                # TODO edit-7 country is required (flash proper error message)
-                if country == '':
-                    flash("Country is required", "danger")
-                    return redirect("edit")
-                # TODO edit-8 website is not required
-                # 
-                # note: call zip variable zipcode as zip is a built in function it could lead to issues
-                data = [name, address, city, state, country, zipcode, website]
-                data.append(id)
-                try:
-                    # TODO edit-9 fill in proper update query
-                    result = DB.update("""
-                    UPDATE IS601_MP2_Companies SET name = %s, address = %s, city = %s, state = %s, country = %s, zip = %s, website = %s WHERE id = %s
-                    """, *data)
-                    if result.status:
-                        flash("Updated record", "success")
-                except Exception as e:
-                    # TODO edit-10 make this user-friendly
-                    flash(f" Following exception occured while updating the company: {str(e)}", "danger")
+            # TODO edit-2 retrieve form data for name, address, city, state, country, zip, website
+            name = form.name.data
+            address = form.address.data
+            city = form.city.data
+            zipcode = form.zip.data
+            website = form.website.data
+            state = request.form.get("state", None)
+            country = request.form.get("country", None)
+            # TODO edit-3 name is required (flash proper error message)
+            if name == '' or name == None:
+                flash("Name is required", "danger")
+                return redirect("add")
+            # TODO edit-4 address is required (flash proper error message)
+            if address == '' or address == None:
+                flash("Address is required", "danger")
+                return redirect("add")
+            # TODO edit-5 city is required (flash proper error message)
+            if city == '' or city == None:
+                flash("City is required", "danger")
+                return redirect("add")
+            # TODO edit-6 state is required (flash proper error message)
+            if state == '' or state == None:
+                flash("State is required", "danger")
+                return redirect("edit")
+            # TODO edit-7 country is required (flash proper error message)
+            if country == '' or country == None:
+                flash("Country is required", "danger")
+                return redirect("edit")
+            # TODO edit-8 website is not required
+            if website == '':
+                website = None
+            # 
+            # note: call zip variable zipcode as zip is a built in function it could lead to issues
+            data = [name, address, city, state, country, zipcode, website]
+            data.append(id)
+            try:
+                # TODO edit-9 fill in proper update query
+                result = DB.update("""
+                UPDATE IS601_MP2_Companies SET name = %s, address = %s, city = %s, state = %s, country = %s, zip = %s, website = %s WHERE id = %s
+                """, *data)
+                if result.status:
+                    flash("Updated record", "success")
+            except Exception as e:
+                # TODO edit-10 make this user-friendly
+                flash(f" Following exception occured while updating the company: {str(e)}", "danger")
         try:
             # TODO edit-11 fetch the updated data
             result = DB.selectOne("SELECT name, address, city, state, country, zip, website FROM IS601_MP2_Companies WHERE id = %s", id)
