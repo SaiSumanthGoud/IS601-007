@@ -9,13 +9,19 @@ employee = Blueprint('employee', __name__, url_prefix='/employee')
 def search():
     rows = []
     # DO NOT DELETE PROVIDED COMMENTS
+
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO search-1 retrieve employee id as id, first_name, last_name, email, company_id, company_name using a LEFT JOIN
-    query = "SELECT e.id, e.first_name, e.last_name, e.email, e.company_id, IF(c.name is not null, c.name,'N/A') AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE 1=1"
+    query = """SELECT e.id, e.first_name, e.last_name, e.email, e.company_id, IF(c.name is not null, c.name,'N/A') AS company_name 
+                from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE 1=1"""
     args = [] # <--- append values to replace %s placeholders
     allowed_columns = ["first_name", "last_name", "email", "company_name"]
 
     allowed_columns_tuples = [(c, c) for c in allowed_columns]
 
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO search-2 get fn, ln, email, company, column, order, limit from request args
     fn = request.args.get("fn")
     ln = request.args.get("ln")
@@ -25,6 +31,8 @@ def search():
     order = request.args.get("order")
     limit = request.args.get("limit", 10)
 
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO search-3 append like filter for first_name if provided
     if fn:
         query += " AND first_name like %s"
@@ -40,6 +48,8 @@ def search():
         query += " AND email like %s"
         args.append(f"%{email}%")
 
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO search-6 append equality filter for company_id if provided
     if company:
         query += f" AND company_id = {company}"
@@ -51,6 +61,8 @@ def search():
             and order in ["asc", "desc"]:
             query += f" ORDER BY {column} {order}"
 
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO search-8 append limit (default 10) or limit greater than 1 and less than or equal to 100
     if limit and int(limit) > 0 and int(limit) <= 100:
         query += " LIMIT %s"
@@ -72,7 +84,10 @@ def search():
         if result.status:
             rows = result.rows
     except Exception as e:
+        # UCID: sp2927
+        # Date: 24 Nov 2022
         # TODO search-10 make message user friendly
+        print(f"Following exception occured while fetching the Employee list: {str(e)}")
         flash(f"Following exception occured while fetching the Employee list: {str(e)}", "error")
     # hint: use allowed_columns in template to generate sort dropdown
     return render_template("list_employees.html", rows=rows, allowed_columns=allowed_columns_tuples)
@@ -81,11 +96,17 @@ def search():
 def add():
     form = EmployeeForm(request.form)
     if request.method == "POST":
+
+        # UCID: sp2927
+        # Date: 23 Nov 2022
         # TODO add-1 retrieve form data for first_name, last_name, company, email
         first_name = form.first_name.data
         last_name = form.last_name.data
         email = form.email.data
         company_id = request.form.get("company", None)
+
+        # UCID: sp2927
+        # Date: 23 Nov 2022
         # TODO add-2 first_name is required (flash proper error message)
         if first_name == '' or first_name == None:
             flash("first name is required", "danger")
@@ -108,6 +129,9 @@ def add():
             flash("Invalid email", "warning")
             return redirect("add")
         
+
+        # UCID: sp2927
+        # Date: 23 Nov 2022
         try:
             result = DB.insertOne("""
             INSERT INTO IS601_MP2_Employees (first_name, last_name, email, company_id)
@@ -118,13 +142,16 @@ def add():
                 flash("Created Employee Record", "success")
         except Exception as e:
             # TODO add-7 make message user friendly
-            print(e)
+            print(f" Following exception occured while adding the employee record: {str(e)}")
             flash(f" Following exception occured while adding the employee record: {str(e)}", "danger")
     return render_template("add_employee.html", form=form)
 
 @employee.route("/edit", methods=["GET", "POST"])
 def edit():
     form = EmployeeForm(request.form)
+
+    # UCID: sp2927
+    # Date: 24 Nov 2022
     # TODO edit-1 request args id is required (flash proper error message)
     id = request.args.get("id")
     if id is None:
@@ -137,22 +164,27 @@ def edit():
             last_name = form.last_name.data
             email = form.email.data
             company_id = request.form.get("company", None)
+
+            # UCID: sp2927
+            # Date: 24 Nov 2022
             # TODO edit-2 first_name is required (flash proper error message)
             if first_name == '' or first_name == None:
                 flash("first name is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             # TODO edit-3 last_name is required (flash proper error message)
             if last_name == '' or last_name == None:
                 flash("last name is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             # TODO edit-4 company may be None
             if company_id == '':
                 company_id = None
             # TODO edit-5 email is required (flash proper error message)
             if email == '' or email == None:
                 flash("email is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             
+            # UCID: sp2927
+            # Date: 24 Nov 2022
             data = [first_name, last_name, company_id, email]
             data.append(id)
             try:
@@ -164,8 +196,12 @@ def edit():
                     flash("Updated Employee record", "success")
             except Exception as e:
                 # TODO edit-7 make this user-friendly
+                print(f" Following exception occured while updating the employee: {str(e)}")
                 flash(f" Following exception occured while updating the employee: {str(e)}", "danger")
         try:
+            
+            # UCID: sp2927
+            # Date: 24 Nov 2022
             # TODO edit-8 fetch the updated data (including company_name)
             # company_name should be 'N/A' if the employee isn't assigned to a copany
             result = DB.selectOne("SELECT e.first_name, e.last_name, e.email, e.company_id, c.name AS company_name from IS601_MP2_Employees e LEFT JOIN IS601_MP2_Companies c ON e.company_id = c.id WHERE e.id = %s", id)
@@ -174,12 +210,16 @@ def edit():
                 form.process(MultiDict(row))
         except Exception as e:
             # TODO edit-9 make this user-friendly
+            print(f" Following exception occured while fetching the updated employee record: {str(e)}")
             flash(f" Following exception occured while fetching the updated employee record: {str(e)}", "danger")
     # TODO edit-10 pass the employee data to the render template
     return render_template("edit_employee.html", form=form, company_id=row['company_id'])
 
 @employee.route("/delete", methods=["GET"])
 def delete():
+            
+    # UCID: sp2927
+    # Date: 3 Dec 2022
     # TODO delete-1 delete employee by id
     # TODO delete-2 redirect to employee search
     # TODO delete-3 pass all argument except id to this route

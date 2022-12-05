@@ -18,6 +18,9 @@ def importCSV():
         if file.filename == '':
             flash('No selected file', "warning")
             return redirect(request.url)
+
+        # UCID: sp2927
+        # Date: 23 Nov 2022
         # TODO importcsv-1 check that it's a .csv file, return a proper flash message if it's not
         if os.path.splitext(file.filename)[1] != ".csv":
             flash('Invalid File Type, The file selected is not a .csv file', "warning")
@@ -37,6 +40,9 @@ def importCSV():
             """
             # Note: this reads the file as a stream instead of requiring us to save it
             stream = io.TextIOWrapper(file.stream._file, "UTF8", newline=None)
+
+            # UCID: sp2927
+            # Date: 23 Nov 2022
             # TODO importcsv-2 read the csv file stream as a dict
             for row in csv.DictReader(stream, delimiter=','):
                 # print(row) #example
@@ -52,6 +58,9 @@ def importCSV():
                 print(f"Inserting or updating {len(companies)} companies")
                 try:
                     result = DB.insertMany(company_query, companies)
+
+                    # UCID: sp2927
+                    # Date: 23 Nov 2022
                     # TODO importcsv-5 display flash message about number of companies inserted
                     flash(f"Inserted {len(companies)} companies records successfully!", "success")
                 except Exception as e:

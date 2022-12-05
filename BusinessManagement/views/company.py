@@ -8,13 +8,20 @@ company = Blueprint('company', __name__, url_prefix='/company')
 def search():
     rows = []
     # DO NOT DELETE PROVIDED COMMENTS
+            
+    # UCID: sp2927
+    # Date: 26 Nov 2022
     # TODO search-1 retrieve id, name, address, city, country, state, zip, website, employee count for the company
     # don't do SELECT *
-    query = "SELECT c.id, c.name, c.address, c.city, c.country, c.state, c.zip, IF(c.website is not null, c.website,'N/A') AS website, COUNT(e.id) AS Employees from IS601_MP2_Companies c LEFT JOIN IS601_MP2_Employees e ON e.company_id = c.id WHERE 1=1"
+    query = """SELECT c.id, c.name, c.address, c.city, c.country, c.state, c.zip, IF(c.website is not null, c.website,'N/A') AS website, COUNT(e.id) AS Employees 
+                from IS601_MP2_Companies c LEFT JOIN IS601_MP2_Employees e ON e.company_id = c.id WHERE 1=1"""
     args = [] # <--- append values to replace %s placeholders
     allowed_columns = ["name", "city", "country", "state"]
 
     allowed_columns_tuples = [(c, c) for c in allowed_columns]
+            
+    # UCID: sp2927
+    # Date: 26 Nov 2022
     # TODO search-2 get name, country, state, column, order, limit request args
     name = request.args.get("name")
     country = request.args.get("country")
@@ -22,7 +29,9 @@ def search():
     column = request.args.get("column")
     order = request.args.get("order")
     limit = request.args.get("limit", 10)
-
+            
+    # UCID: sp2927
+    # Date: 26 Nov 2022
     # TODO search-3 append a LIKE filter for name if provided
     if name:
         query += " AND name like %s"
@@ -37,14 +46,18 @@ def search():
         query += f" AND state = '{state}'"
 
     query += " GROUP BY c.id"
-
+            
+    # UCID: sp2927
+    # Date: 27 Nov 2022
     # TODO search-6 append sorting if column and order are provided and within the allows columsn and allowed order asc,desc
     if column and order:
         print(column, order)
         if column in allowed_columns \
             and order in ["asc", "desc"]:
             query += f" ORDER BY {column} {order}"
-
+            
+    # UCID: sp2927
+    # Date: 27 Nov 2022
     # TODO search-7 append limit (default 10) or limit greater than 1 and less than or equal to 100
     if limit and int(limit) > 0 and int(limit) <= 100:
         query += " LIMIT %s"
@@ -66,7 +79,11 @@ def search():
         if result.status:
             rows = result.rows
     except Exception as e:
+            
+        # UCID: sp2927
+        # Date: 27 Nov 2022
         # TODO search-9 make message user friendly
+        print(f"Following exception occured while fetching the company list:{str(e)}")
         flash(f"Following exception occured while fetching the company list:{str(e)}", "danger")
     # hint: use allowed_columns in template to generate sort dropdown
     return render_template("list_companies.html", rows=rows, allowed_columns=allowed_columns_tuples)
@@ -75,6 +92,9 @@ def search():
 def add():
     form = CompanyForm(request.form)
     if request.method == "POST":
+            
+        # UCID: sp2927
+        # Date: 25 Nov 2022
         # TODO add-1 retrieve form data for name, address, city, state, country, zip, website
         name = form.name.data
         address = form.address.data
@@ -83,6 +103,9 @@ def add():
         website = form.website.data
         state = request.form.get("state", None)
         country = request.form.get("country", None)
+            
+        # UCID: sp2927
+        # Date: 25 Nov 2022
         # TODO add-2 name is required (flash proper error message)
         if name == '' or name == None:
             flash("Name is required", "danger")
@@ -95,13 +118,13 @@ def add():
         if city == '' or city == None:
             flash("City is required", "danger")
             return redirect("add")
-        # TODO add-5 state is required (flash proper error message)
-        if state == '' or state == None:
-            flash("State is required", "danger")
-            return redirect("add")
         # TODO add-6 country is required (flash proper error message)
         if country == '' or country == None:
             flash("Country is required", "danger")
+            return redirect("add")
+        # TODO add-5 state is required (flash proper error message)
+        if state == '' or state == None:
+            flash("State is required", "danger")
             return redirect("add")
         # TODO add-7 website is not required
         if website == '':
@@ -112,6 +135,9 @@ def add():
 
         if not has_error:
             try:
+            
+                # UCID: sp2927
+                # Date: 25 Nov 2022
                 result = DB.insertOne("""
                 INSERT INTO IS601_MP2_Companies (name, address, city, country, state, zip, website)
                             VALUES (%(name)s, %(address)s, %(city)s, %(country)s, %(state)s, %(zip)s, %(website)s)
@@ -121,6 +147,7 @@ def add():
                     flash("Added Company", "success")
             except Exception as e:
                 # TODO add-9 make message user friendly
+                print(f" Following exception occured while adding the company: {str(e)}")
                 flash(f" Following exception occured while adding the company: {str(e)}", "danger")
         
     return render_template("add_company.html", form=form)
@@ -128,6 +155,9 @@ def add():
 @company.route("/edit", methods=["GET", "POST"])
 def edit():
     form = CompanyForm(request.form)
+            
+    # UCID: sp2927
+    # Date: 29 Nov 2022
     # TODO edit-1 request args id is required (flash proper error message)
     id = request.args.get("id")
     if id is None:
@@ -143,18 +173,21 @@ def edit():
             website = form.website.data
             state = request.form.get("state", None)
             country = request.form.get("country", None)
+            
+            # UCID: sp2927
+            # Date: 29 Nov 2022
             # TODO edit-3 name is required (flash proper error message)
             if name == '' or name == None:
                 flash("Name is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             # TODO edit-4 address is required (flash proper error message)
             if address == '' or address == None:
                 flash("Address is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             # TODO edit-5 city is required (flash proper error message)
             if city == '' or city == None:
                 flash("City is required", "danger")
-                return redirect("add")
+                return redirect("edit")
             # TODO edit-6 state is required (flash proper error message)
             if state == '' or state == None:
                 flash("State is required", "danger")
@@ -171,6 +204,9 @@ def edit():
             data = [name, address, city, state, country, zipcode, website]
             data.append(id)
             try:
+            
+                # UCID: sp2927
+                # Date: 29 Nov 2022
                 # TODO edit-9 fill in proper update query
                 result = DB.update("""
                 UPDATE IS601_MP2_Companies SET name = %s, address = %s, city = %s, state = %s, country = %s, zip = %s, website = %s WHERE id = %s
@@ -179,8 +215,12 @@ def edit():
                     flash("Updated record", "success")
             except Exception as e:
                 # TODO edit-10 make this user-friendly
+                print(f" Following exception occured while updating the company: {str(e)}")
                 flash(f" Following exception occured while updating the company: {str(e)}", "danger")
         try:
+            
+            # UCID: sp2927
+            # Date: 1 Dec 2022
             # TODO edit-11 fetch the updated data
             result = DB.selectOne("SELECT name, address, city, state, country, zip, website FROM IS601_MP2_Companies WHERE id = %s", id)
             if result.status:
@@ -189,6 +229,7 @@ def edit():
                 
         except Exception as e:
             # TODO edit-12 make this user-friendly
+            print(f" Following exception occured while fetching the updated company record: {str(e)}")
             flash(f" Following exception occured while fetching the updated company record: {str(e)}", "danger")
     # TODO edit-13 pass the company data to the render template
     return render_template("edit_company.html", form=form, state=row['state'], country=row['country'])
