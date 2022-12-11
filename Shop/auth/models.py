@@ -17,15 +17,3 @@ class User(UserMixin, JsonSerializable):
         return True
     def get_id(self):
         return str(self.id)
-    # usable in templates and views to check if user has a role
-    def has_role(self, role):
-        for r in self.roles:
-            if r.name in [role, "Admin"]: # if has Admin role, always allow
-                return True
-        return False
-    def has_one_of_roles(self, roles):
-        _roles = [list(roles), "Admin"]
-        for r in self.roles:
-            if r.name in _roles:
-                return True
-        return False
