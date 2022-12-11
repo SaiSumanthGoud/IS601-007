@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, flash, redirect, url_for,current_app, session
+from flask import Blueprint, render_template, flash, redirect, url_for
 from auth.forms import LoginForm, RegisterForm
 from sql.db import DB
 
-from flask_login import login_user, login_required
+from flask_login import login_user, login_required, logout_user
 from auth.models import User
 from flask_bcrypt import Bcrypt
 
@@ -72,3 +72,9 @@ def login():
 @login_required
 def landing_page():
     return render_template("landing_page.html")
+
+@auth.route("/logout", methods=["GET"])
+def logout():
+    logout_user()
+    flash("Successfully logged out", "success")
+    return redirect(url_for("auth.login"))

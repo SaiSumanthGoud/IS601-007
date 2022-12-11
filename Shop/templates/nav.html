@@ -15,7 +15,6 @@
                 <li class="nav-item">
                     <a class="nav-link" style="color: white;" href="#">Shop</a>
                 </li>
-
             </ul>
             <ul class="navbar-nav">
                 {% if not current_user.is_authenticated %}
@@ -27,7 +26,7 @@
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="btn btn-danger" href="#">Logout</a>
+                        <a class="btn btn-danger" href="{{url_for('auth.logout')}}">Logout</a>
                     </li>
                 {% endif %}
             </ul>
