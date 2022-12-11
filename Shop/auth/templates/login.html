@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="container-fluid">
+    <div class="h3 text-center m-3">Login</div>
+    <div class="card mx-auto bg-transparent border-light" style="max-width: 500px;">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                {{render_field(form.email)}}
+                {{render_field(form.password)}}
+                {{form.submit(class="btn btn-primary")}}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
