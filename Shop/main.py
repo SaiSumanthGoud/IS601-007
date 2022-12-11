@@ -1,7 +1,7 @@
 # from https://towardsdatascience.com/deploy-to-google-cloud-run-using-github-actions-590ecf957af0
 import os
 import sys
-from flask import Flask, render_template
+from flask import Flask, render_template, session
 from dotenv import load_dotenv
 load_dotenv()
 import flask_login
@@ -45,6 +45,12 @@ def create_app(config_filename=''):
                 return None
             print("login_manager loading user") # happens each request
             from auth.models import User
+            if session["_user_id"] == user_id and "user" in session.keys():
+                print("loading user from session")
+                # load user from session (convert json to User)
+                # see User object for convering json of roles to [Roles]
+                import jsons
+                return jsons.loads(session["user"], User)
             from sql.db import DB
             try:
                 result = DB.selectOne("SELECT id, email, username FROM IS601_Users WHERE id = %s", user_id)

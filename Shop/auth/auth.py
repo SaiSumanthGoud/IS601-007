@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, flash, redirect, url_for
+from flask import Blueprint, render_template, flash, redirect, session, url_for
 from auth.forms import LoginForm, RegisterForm
 from sql.db import DB
 
@@ -55,6 +55,8 @@ def login():
                         success = login_user(user)
                         
                         if success:
+                            # store user object in session as json
+                            session["user"] = user.toJson()
                             flash("Log in successful", "success")
                             return redirect(url_for("auth.landing_page"))
                         else:
