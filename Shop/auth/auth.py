@@ -1,9 +1,9 @@
 from flask import Blueprint, current_app, render_template, flash, redirect, session, url_for
-from auth.forms import LoginForm, RegisterForm
+from auth.forms import LoginForm, ProfileForm, RegisterForm
 from roles.models import Role
 from sql.db import DB
 
-from flask_login import login_user, login_required, logout_user
+from flask_login import current_user, login_user, login_required, logout_user
 from auth.models import User
 from flask_bcrypt import Bcrypt
 
@@ -99,3 +99,58 @@ def logout():
                           identity=AnonymousIdentity())
     flash("Successfully logged out", "success")
     return redirect(url_for("auth.login"))
+
+@auth.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    user_id = current_user.get_id()
+    form = ProfileForm()
+    if form.validate_on_submit():
+        is_valid = True
+        email = form.email.data
+        username = form.username.data
+        current_password = form.current_password.data
+        password = form.password.data
+        confirm = form.confirm.data
+        # handle password change only if all 3 are provided
+        if current_password and password and confirm:
+            try:
+                result = DB.selectOne("SELECT password FROM IS601_Users where id = %s", user_id)
+                if result.status and result.row:
+                    # verify current password
+                    if bcrypt.check_password_hash(result.row["password"], current_password):
+                        # update new password
+                        hash = bcrypt.generate_password_hash(password)
+                        try:
+                            result = DB.update("UPDATE IS601_Users SET password = %s WHERE id = %s", hash, user_id)
+                            if result.status:
+                                flash("Updated password", "success")
+                        except Exception as ue:
+                            flash(ue, "danger")
+                    else:
+                        flash("Invalid password","danger")
+            except Exception as se:
+                flash(se, "danger")
+        
+        if is_valid:
+            try: # update email, username
+                result = DB.update("UPDATE IS601_Users SET email = %s, username = %s WHERE id = %s", email, username, user_id)
+                if result.status:
+                    flash("Saved profile", "success")
+            except Exception as e:
+                check_duplicate(e)
+    try:
+        # get latest info if anything changed
+        result = DB.selectOne("SELECT id, email, username FROM IS601_Users where id = %s", user_id)
+        if result.status and result.row:
+            user = User(**result.row)
+            print("loading user", user)
+            form.username.data = user.username
+            form.email.data = user.email
+            # TODO update session
+            current_user.email = user.email
+            current_user.username = user.username
+            session["user"] = current_user.toJson()
+    except Exception as e:
+        flash(e, "danger")
+    return render_template("profile.html", form=form)
