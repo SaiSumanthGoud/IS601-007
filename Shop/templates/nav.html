@@ -15,6 +15,15 @@
                 <li class="nav-item">
                     <a class="nav-link" style="color: white;" href="#">Shop</a>
                 </li>
+                <!-- items nav (requires admin )-->
+                {% if current_user.is_authenticated and current_user.has_role("Admin") %}
+                    {% set roles = [
+                        ("roles.add", "Add"),
+                        ("roles.list", "List"),
+                        ("roles.assign", "Assign")
+                    ] %}
+                    {{dropdown_nav("Items", roles)}}
+                {% endif %}
             </ul>
             <ul class="navbar-nav">
                 {% if not current_user.is_authenticated %}
