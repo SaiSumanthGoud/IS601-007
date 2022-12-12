@@ -1,13 +1,17 @@
-from flask import Blueprint, render_template, flash, redirect, url_for
-from auth.forms import LoginForm, RegisterForm
+from flask import Blueprint, current_app, render_template, flash, redirect, session, url_for
+from auth.forms import LoginForm, ProfileForm, RegisterForm
+from roles.models import Role
 from sql.db import DB
 
-from flask_login import login_user, login_required, logout_user
+from flask_login import current_user, login_user, login_required, logout_user
 from auth.models import User
 from flask_bcrypt import Bcrypt
 
 bcrypt = Bcrypt()
 
+from flask_principal import Identity, AnonymousIdentity, \
+     identity_changed
+     
 auth = Blueprint('auth', __name__, url_prefix='/',template_folder='templates')
 
 def check_duplicate(e):
@@ -51,10 +55,20 @@ def login():
                     if bcrypt.check_password_hash(hash, password):
                         del result.row["password"]
                         user = User(**result.row)
+                        # get roles
+                        result = DB.selectAll("""
+                        SELECT name FROM IS601_Roles r JOIN IS601_UserRoles ur on r.id = ur.role_id WHERE ur.user_id = %s AND r.is_active = 1 AND ur.is_active = 1
+                        """, user.id)
+                        if result.status and result.rows:
+                            print("role rows", result.rows)
+                            user.roles = [Role(**r) for r in result.rows]
+                        print(f"Roles: {user.roles}")
 
                         success = login_user(user)
                         
                         if success:
+                            # store user object in session as json
+                            session["user"] = user.toJson()
                             flash("Log in successful", "success")
                             return redirect(url_for("auth.landing_page"))
                         else:
@@ -76,5 +90,67 @@ def landing_page():
 @auth.route("/logout", methods=["GET"])
 def logout():
     logout_user()
+     # Remove session keys set by Flask-Principal
+    for key in ('identity.name', 'identity.auth_type'):
+        session.pop(key, None)
+
+    # Tell Flask-Principal the user is anonymous
+    identity_changed.send(current_app._get_current_object(),
+                          identity=AnonymousIdentity())
     flash("Successfully logged out", "success")
     return redirect(url_for("auth.login"))
+
+@auth.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    user_id = current_user.get_id()
+    form = ProfileForm()
+    if form.validate_on_submit():
+        is_valid = True
+        email = form.email.data
+        username = form.username.data
+        current_password = form.current_password.data
+        password = form.password.data
+        confirm = form.confirm.data
+        # handle password change only if all 3 are provided
+        if current_password and password and confirm:
+            try:
+                result = DB.selectOne("SELECT password FROM IS601_Users where id = %s", user_id)
+                if result.status and result.row:
+                    # verify current password
+                    if bcrypt.check_password_hash(result.row["password"], current_password):
+                        # update new password
+                        hash = bcrypt.generate_password_hash(password)
+                        try:
+                            result = DB.update("UPDATE IS601_Users SET password = %s WHERE id = %s", hash, user_id)
+                            if result.status:
+                                flash("Updated password", "success")
+                        except Exception as ue:
+                            flash(ue, "danger")
+                    else:
+                        flash("Invalid password","danger")
+            except Exception as se:
+                flash(se, "danger")
+        
+        if is_valid:
+            try: # update email, username
+                result = DB.update("UPDATE IS601_Users SET email = %s, username = %s WHERE id = %s", email, username, user_id)
+                if result.status:
+                    flash("Saved profile", "success")
+            except Exception as e:
+                check_duplicate(e)
+    try:
+        # get latest info if anything changed
+        result = DB.selectOne("SELECT id, email, username FROM IS601_Users where id = %s", user_id)
+        if result.status and result.row:
+            user = User(**result.row)
+            print("loading user", user)
+            form.username.data = user.username
+            form.email.data = user.email
+            # TODO update session
+            current_user.email = user.email
+            current_user.username = user.username
+            session["user"] = current_user.toJson()
+    except Exception as e:
+        flash(e, "danger")
+    return render_template("profile.html", form=form)

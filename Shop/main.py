@@ -1,11 +1,12 @@
 # from https://towardsdatascience.com/deploy-to-google-cloud-run-using-github-actions-590ecf957af0
 import os
 import sys
-from flask import Flask, render_template
+from flask import Flask, render_template, session
 from dotenv import load_dotenv
 load_dotenv()
 import flask_login
 from flask_login import current_user
+from flask_principal import identity_loaded, RoleNeed, UserNeed, Principal
 from flask_caching import Cache
 # added so modules can be found between the two different lookup states:
 # from tests and from regular running of the app
@@ -38,6 +39,11 @@ def create_app(config_filename=''):
     with app.app_context():
         from auth.auth import auth
         app.register_blueprint(auth)
+        from roles.roles import roles
+        app.register_blueprint(roles)
+
+        # load the extension
+        principals = Principal(app) # must be defined/initialized for identity to work (flask_principal)
 
         @login_manager.user_loader
         def load_user(user_id):
@@ -45,6 +51,12 @@ def create_app(config_filename=''):
                 return None
             print("login_manager loading user") # happens each request
             from auth.models import User
+            if session["_user_id"] == user_id and "user" in session.keys():
+                print("loading user from session")
+                # load user from session (convert json to User)
+                # see User object for convering json of roles to [Roles]
+                import jsons
+                return jsons.loads(session["user"], User)
             from sql.db import DB
             try:
                 result = DB.selectOne("SELECT id, email, username FROM IS601_Users WHERE id = %s", user_id)
@@ -53,6 +65,21 @@ def create_app(config_filename=''):
             except Exception as e:
                 print(e)
             return None
+
+        @identity_loaded.connect_via(app)
+        def on_identity_loaded(sender, identity):
+            # Set the identity user object
+            identity.user = current_user
+
+            # Add the UserNeed to the identity
+            if hasattr(current_user, 'id'):
+                identity.provides.add(UserNeed(current_user.id))
+
+            # Assuming the User model has a list of roles, update the
+            # identity with the roles that the user provides
+            if hasattr(current_user, 'roles'):
+                for role in current_user.roles:
+                    identity.provides.add(RoleNeed(role.name))
 
         # DON'T DELETE, this cleans up the DB connection after each request
         # this avoids sleeping queries
