@@ -20,18 +20,13 @@ def product():
         type = "Create"
         
     if form.validate_on_submit():
-        path = "static/assets/placeholder.png"
-        if request.files['image']:
-            f = request.files['image']
-            path = os.path.join('static/assets/', secure_filename(f.filename))
-            f.save(path)
         if form.id.data: # it's an update
             try:
                 print(form.visible.data)
                 result = DB.update("UPDATE IS601_Products set name = %s, description = %s,category = %s, visibility = %s,stock = %s, unit_price = %s, image=%s WHERE id = %s",
-                form.name.data, form.description.data,form.category.data, 1 if form.visible.data else 0,form.stock.data, form.unit_price.data, path, form.id.data)
+                form.name.data, form.description.data,form.category.data, 1 if form.visible.data else 0,form.stock.data, form.unit_price.data, form.image.data, form.id.data)
                 if result.status:
-                    flash(f"Updated {form.name.data}", "success")
+                    flash(f"Updated Product - {form.name.data}", "success")
             except Exception as e:
                 print("Error updating product", e)
                 flash(f"Error updating product {form.name.data}", "danger")
@@ -39,9 +34,9 @@ def product():
             try:
                 result = DB.update("""INSERT INTO IS601_Products (name, description, category, visibility, stock, unit_price, image) 
                 VALUES (%s,%s,%s,%s,%s,%s,%s)""",
-                form.name.data, form.description.data,form.category.data, 1 if form.visible else 0,form.stock.data, form.unit_price.data, path)
+                form.name.data, form.description.data,form.category.data, 1 if form.visible else 0,form.stock.data, form.unit_price.data, form.image.data)
                 if result.status:
-                    flash(f"Created {form.name.data}", "success")
+                    flash(f"Created Product - {form.name.data}", "success")
                     form = AddProductForm() # clear form
             except Exception as e:
                 print("Error creating product", e)
