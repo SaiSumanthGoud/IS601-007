@@ -110,3 +110,17 @@ def product_list():
         flash("There was a problem loading products", "danger")
     return render_template("product_list.html", rows=rows)
 
+@shop.route("/admin/productDetails", methods=["GET"])
+def productDetails():
+    id = request.args.get("id", None)
+    type = "View"
+    if id:
+        try:
+            result = DB.selectOne("SELECT id, name, description, category, visibility as visible, stock, unit_price, image FROM IS601_Products WHERE id = %s", id)
+            if result.status and result.row:
+                row = result.row
+        except Exception as e:
+            print("Error fetching product", e)
+            flash("product not found", "danger")
+    return render_template("product.html", row=row, type=type)
+
