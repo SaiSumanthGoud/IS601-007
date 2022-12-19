@@ -58,6 +58,8 @@ def shop_list():
     rows = []
     category_list = []
     args = []
+    # UCID: sp2927
+    # Date: 19-12-2022
     query = """SELECT id, name, description, stock, unit_price, image FROM IS601_Products WHERE stock > 0 AND visibility = 1"""
     category_result = DB.selectAll("SELECT DISTINCT category from IS601_Products",)
     if category_result.status and category_result.rows:
@@ -87,7 +89,6 @@ def shop_list():
     print("query",query)
     print("args", args)
     try:
-        # result = DB.selectAll("SELECT id, name, description, stock, unit_price, image FROM IS601_S_Products WHERE stock > 0 AND visibility = 1 LIMIT 25",)
         result = DB.selectAll(query, *args)
         if result.status and result.rows:
             rows = result.rows
