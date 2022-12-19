@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}Shop{% endblock %}
+
+<!-- content -->
+{% block content %}
+<div class="container-fluid">
+    <div class="h3 text-center m-3">Shop</div>
+    
+    <form class="row row-cols-lg-auto g-3 align-items-center">
+        <form method="GET">
+            <div class="form-group mb-3">
+                <label class="form-label" for="n">Product Name</label>
+                <input class="form-control" id="n" name="product_name" value="{{request.args.get('product_name','')}}"/>
+                <div>&nbsp;</div>
+            </div>
+            <div class="col-12">
+                <label class="visually-hidden" for="category">category</label>
+                {% with val = request.args.get("category", '') %}
+                    {% with cat = category_list %}
+                        {% include "category_dropdown.html" %}
+                    {% endwith %}
+                {% endwith %}
+            </div>
+            {% with cols = [("unit_price","Price")] %}
+                {% include "sort_filter.html" %}
+            {% endwith %}
+            <div class="col-12">
+                <label class="form-label" for="limit">Limit</label>
+                <input class="form-control" type="number" min="1" max="100" id="limit" name="limit"
+                    value="{{request.args.get('limit') or '10'}}" />
+                <div>&nbsp;</div>
+            </div>
+            <div class="col-12">
+                <input type="submit" class="btn btn-primary" value="Filter" />
+            </div>
+            <div class="col-12">
+                <a href="?" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </form>
+    <div class="row row-cols-lg-auto justify-content-center">
+        {% for row in rows %}
+        <div class="col mt-5">
+            <div class="card text-light bg-dark border" style="width: 20em">
+                <h5 class="card-header">
+                    Stock: {{row["stock"]}} left
+                </h5>
+                {% if row["image"] %}
+                    <img src="{{row['image']}}" style="aspect-ratio: 1; width:100%">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{row["name"]}}
+                    </h5>
+                    <p class="card-text">
+                        {{row["description"]}}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <h5 class="card-text">
+                        Cost: ${{row["unit_price"]}}
+                    </h5>
+                    <form action="#" method="POST" class="row row-cols-lg-auto g-0 mt-2" style="justify-content: space-between;">
+                        <input type="hidden" name="id" value="{{row['id']}}" />
+                        <input type="number" class="form-control col-8" name="quantity" value="1" style="flex-basis: 70%;" />
+                        <div class="col-3">
+                            <input type="submit" value="+Add" class="btn btn-light" />
+                        </div>
+                    </form>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.has_role("Admin") %}
+                        <form action="{{url_for('shop.product')}}" method="POST">
+                            <input type="hidden" name="id" value="{{row['id']}}" />
+                            <div class="mt-2">
+                                <a href="{{url_for('shop.product', id=row.get('id'))}}" class="btn btn-primary" style="width: 100%;">Edit</a>
+                            </div>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

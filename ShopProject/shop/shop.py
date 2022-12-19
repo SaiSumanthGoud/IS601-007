@@ -50,3 +50,48 @@ def product():
             print("Error fetching product", e)
             flash("product not found", "danger")
     return render_template("product.html", form=form, type=type)
+
+
+@shop.route("/shop", methods=["GET","POST"])
+@login_required
+def shop_list():
+    rows = []
+    category_list = []
+    args = []
+    query = """SELECT id, name, description, stock, unit_price, image FROM IS601_Products WHERE stock > 0 AND visibility = 1"""
+    category_result = DB.selectAll("SELECT DISTINCT category from IS601_Products",)
+    if category_result.status and category_result.rows:
+        for cat in category_result.rows:
+            print(cat['category'])
+            category_list.append(cat['category'])
+        print(category_list)
+
+    product_name  = request.args.get("product_name")
+    cat_selected  = request.args.get("category")
+    sort_by = request.args.get('sort_by')
+    order = request.args.get("order")
+    limit = request.args.get("limit", 10)
+
+    if product_name:
+        query += " AND name like %s"
+        args.append(f"%{product_name}%")
+    if cat_selected:
+        query += " AND category = %s"
+        args.append(f"{cat_selected}")
+    if sort_by and order:
+        if order in ["asc", "desc"]:
+            query += f" ORDER BY {sort_by} {order}"
+    if limit:
+        query += f" LIMIT {limit}"
+
+    print("query",query)
+    print("args", args)
+    try:
+        # result = DB.selectAll("SELECT id, name, description, stock, unit_price, image FROM IS601_S_Products WHERE stock > 0 AND visibility = 1 LIMIT 25",)
+        result = DB.selectAll(query, *args)
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error fetching products", e)
+        flash("There was a problem loading products", "danger")
+    return render_template("shop.html", rows=rows,category_list=category_list)
