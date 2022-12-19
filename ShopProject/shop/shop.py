@@ -34,7 +34,7 @@ def product():
             try:
                 result = DB.update("""INSERT INTO IS601_Products (name, description, category, visibility, stock, unit_price, image) 
                 VALUES (%s,%s,%s,%s,%s,%s,%s)""",
-                form.name.data, form.description.data,form.category.data, 1 if form.visible else 0,form.stock.data, form.unit_price.data, form.image.data)
+                form.name.data, form.description.data,form.category.data, 1 if form.visible.data else 0,form.stock.data, form.unit_price.data, form.image.data)
                 if result.status:
                     flash(f"Created Product - {form.name.data}", "success")
                     form = AddProductForm() # clear form
@@ -96,3 +96,17 @@ def shop_list():
         print("Error fetching products", e)
         flash("There was a problem loading products", "danger")
     return render_template("shop.html", rows=rows,category_list=category_list)
+    
+@shop.route("/admin/product/list", methods=["GET","POST"])
+@admin_permission.require(http_exception=403)
+def product_list():
+    rows = []
+    try:
+        result = DB.selectAll("SELECT id, name, description, category, stock, unit_price as cost, image, if (visibility = 1,'True','False') as visible FROM IS601_Products LIMIT 25")
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error fetching products", e)
+        flash("There was a problem loading products", "danger")
+    return render_template("product_list.html", rows=rows)
+

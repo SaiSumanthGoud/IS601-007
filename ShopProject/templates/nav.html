@@ -32,7 +32,7 @@
                     {% if current_user.has_role("Admin") %}
                         {% set roles = [
                         ("shop.product", "Add"),
-                        ("shop.product", "List")
+                        ("shop.product_list", "List")
                         ] %}
                         {{dropdown_nav("Products", roles)}}
                     {% endif %}

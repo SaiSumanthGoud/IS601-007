@@ -1,6 +1,6 @@
 {% macro render_table(title,data, ignored = [], view =None, edit=None, delete=None) %}
 <div class="container-fluid">
-    <div class="h1">{{title}}</div>
+    <div class="h1 text-center m-3">{{title}}</div>
 <table class="table bg-dark text-light">
     <thead>
         {% if data and data|length > 0 %}
