@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block title %}{{type}} Item{% endblock %}
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="container-fluid">
+    <div class="h3 text-center m-3">{{type}} Product</div>
+    {% if type == "View" %}
+    <div class="card mx-auto bg-transparent border-light" style="max-width: 500px;">
+        <div class="card-body">
+            <fieldset disabled="disabled">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    {{render_field(form.name)}}
+                    {{render_field(form.description)}}
+                    {{render_field(form.category)}}
+                    {{render_field(form.stock)}}
+                    {{render_field(form.unit_price)}}
+                    {{render_field(form.image)}}
+                    {{render_field(form.visible)}}
+                </form>
+            </fieldset>
+        </div>
+    </div>
+        {% if current_user.is_authenticated %}
+        {% if current_user.has_role("Admin") %}
+        <a href="{{url_for('shop.product')}}?id={{request.args.get('id')}}" class="btn btn-primary">Edit</a>
+        {% endif %}
+        {% endif %}
+    {% else %}
+        <div class="card mx-auto bg-transparent border-light" style="max-width: 500px;">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    {{render_field(form.name)}}
+                    {{render_field(form.description)}}
+                    {{render_field(form.category)}}
+                    {{render_field(form.stock)}}
+                    {{render_field(form.unit_price)}}
+                    {{render_field(form.image)}}
+                    {{render_field(form.visible)}}
+                    {{form.submit(class="btn btn-primary mt-2")}}
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

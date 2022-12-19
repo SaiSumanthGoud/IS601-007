@@ -16,14 +16,22 @@
                     <li class="nav-item">
                         <a class="nav-link" style="color: white;" href="{{url_for('auth.profile')}}">Profile</a>
                     </li>
-                    <!-- items nav (requires admin )-->
+                    <!-- roles nav (requires admin )-->
                     {% if current_user.has_role("Admin") %}
                         {% set roles = [
                             ("roles.add", "Add"),
                             ("roles.list", "List"),
                             ("roles.assign", "Assign")
                         ] %}
-                        {{dropdown_nav("Items", roles)}}
+                        {{dropdown_nav("Roles", roles)}}
+                    {% endif %}
+                    <!-- items nav (requires admin )-->
+                    {% if current_user.has_role("Admin") %}
+                        {% set roles = [
+                        ("shop.product", "Add"),
+                        ("shop.product", "List")
+                        ] %}
+                        {{dropdown_nav("Products", roles)}}
                     {% endif %}
                 {% endif %}
             </ul>
