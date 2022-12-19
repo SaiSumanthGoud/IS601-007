@@ -14,6 +14,9 @@
                         <a class="nav-link" style="color: white;" href="{{url_for('auth.landing_page')}}">Home</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" style="color: white;" href="{{url_for('shop.shop_list')}}">Shop</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" style="color: white;" href="{{url_for('auth.profile')}}">Profile</a>
                     </li>
                     <!-- roles nav (requires admin )-->
@@ -29,7 +32,7 @@
                     {% if current_user.has_role("Admin") %}
                         {% set roles = [
                         ("shop.product", "Add"),
-                        ("shop.product", "List")
+                        ("shop.product_list", "List")
                         ] %}
                         {{dropdown_nav("Products", roles)}}
                     {% endif %}

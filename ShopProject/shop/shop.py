@@ -34,7 +34,7 @@ def product():
             try:
                 result = DB.update("""INSERT INTO IS601_Products (name, description, category, visibility, stock, unit_price, image) 
                 VALUES (%s,%s,%s,%s,%s,%s,%s)""",
-                form.name.data, form.description.data,form.category.data, 1 if form.visible else 0,form.stock.data, form.unit_price.data, form.image.data)
+                form.name.data, form.description.data,form.category.data, 1 if form.visible.data else 0,form.stock.data, form.unit_price.data, form.image.data)
                 if result.status:
                     flash(f"Created Product - {form.name.data}", "success")
                     form = AddProductForm() # clear form
@@ -50,3 +50,63 @@ def product():
             print("Error fetching product", e)
             flash("product not found", "danger")
     return render_template("product.html", form=form, type=type)
+
+
+@shop.route("/shop", methods=["GET","POST"])
+@login_required
+def shop_list():
+    rows = []
+    category_list = []
+    args = []
+    # UCID: sp2927
+    # Date: 19-12-2022
+    query = """SELECT id, name, description, stock, unit_price, image FROM IS601_Products WHERE stock > 0 AND visibility = 1"""
+    category_result = DB.selectAll("SELECT DISTINCT category from IS601_Products",)
+    if category_result.status and category_result.rows:
+        for cat in category_result.rows:
+            print(cat['category'])
+            category_list.append(cat['category'])
+        print(category_list)
+
+    product_name  = request.args.get("product_name")
+    cat_selected  = request.args.get("category")
+    sort_by = request.args.get('sort_by')
+    order = request.args.get("order")
+    limit = request.args.get("limit", 10)
+
+    if product_name:
+        query += " AND name like %s"
+        args.append(f"%{product_name}%")
+    if cat_selected:
+        query += " AND category = %s"
+        args.append(f"{cat_selected}")
+    if sort_by and order:
+        if order in ["asc", "desc"]:
+            query += f" ORDER BY {sort_by} {order}"
+    if limit:
+        query += f" LIMIT {limit}"
+
+    print("query",query)
+    print("args", args)
+    try:
+        result = DB.selectAll(query, *args)
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error fetching products", e)
+        flash("There was a problem loading products", "danger")
+    return render_template("shop.html", rows=rows,category_list=category_list)
+    
+@shop.route("/admin/product/list", methods=["GET","POST"])
+@admin_permission.require(http_exception=403)
+def product_list():
+    rows = []
+    try:
+        result = DB.selectAll("SELECT id, name, description, category, stock, unit_price as cost, image, if (visibility = 1,'True','False') as visible FROM IS601_Products LIMIT 25")
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error fetching products", e)
+        flash("There was a problem loading products", "danger")
+    return render_template("product_list.html", rows=rows)
+
