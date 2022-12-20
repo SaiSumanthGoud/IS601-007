@@ -385,3 +385,48 @@ def order():
         print("Error getting order", e)
         flash("Error fetching order", "danger")
     return render_template("order.html", rows=cart, orders=order)
+
+@shop.route("/admin/orders", methods=["GET"])
+@login_required
+@admin_permission.require(http_exception=403)
+def all_orders():
+    rows = []
+    try:
+        result = DB.selectAll("""
+        SELECT o.id, o.user_id as userID, u.username,  o.total_price FROM IS601_S_Orders o, IS601_Users u WHERE o.user_id = u.id
+        """)
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error getting orders", e)
+        flash("Error fetching orders", "danger")
+    return render_template("admin_orders.html", rows=rows)
+
+@shop.route("/admin/orderdetail", methods=["GET"])
+@login_required
+@admin_permission.require(http_exception=403)
+def admin_order():
+    cart = []
+    order = []
+    id = request.args.get("id")
+    if not id:
+        flash("Invalid order", "danger")
+        return redirect(url_for("shop.orders"))
+    try:
+        result = DB.selectAll("""SELECT oi.id, oi.product_id, oi.quantity, (oi.quantity * oi.cost) as subtotal, p.name
+            FROM IS601_S_OrderItems oi join IS601_Products p on oi.product_id = p.id 
+            WHERE oi.order_id = %s
+            """, id)
+        if result.status and result.rows:
+            cart = result.rows
+
+        result = DB.selectAll("""SELECT id, total_price, address, zip, payment_method, money_received, first_name, last_name, user_id
+        FROM  IS601_S_Orders 
+        WHERE id = %s
+        """, id)
+        if result.status and result.rows:
+            order = result.rows
+    except Exception as e:
+        print("Error getting order", e)
+        flash("Error fetching order", "danger")
+    return render_template("order.html", rows=cart, orders=order)
