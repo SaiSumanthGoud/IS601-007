@@ -1,8 +1,9 @@
 import os
+import traceback
 from flask import Blueprint, request, flash, render_template, redirect, url_for
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import secure_filename
-from shop.forms import AddProductForm, EditProductForm
+from shop.forms import AddProductForm, CheckoutForm, EditProductForm
 from sql.db import DB
 from roles.permissions import admin_permission
 from flask_login import login_required, current_user
@@ -215,3 +216,172 @@ def delete():
             print("Error deleting product",e)
             flash("Error deleting product", "danger")
     return redirect(url_for("shop.product_list"))
+
+@shop.route("/checkout", methods=["GET","POST"])
+@login_required
+def checkout():
+    form = CheckoutForm()
+    user_id = current_user.get_id()
+    rows = []
+    try:
+        result = DB.selectAll("""SELECT c.id, product_id, name, c.quantity, (c.quantity * c.cost) as subtotal, (((i.unit_price - c.cost)/c.cost) * 100) as price_change
+        FROM IS601_S_Cart c JOIN IS601_Products i on c.product_id = i.id
+        WHERE c.user_id = %s
+        """, user_id)
+        if result and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error getting cart", e)
+        flash("Error fetching cart", "danger")
+    return render_template("checkout.html", form=form, rows=rows)
+
+@shop.route("/purchase", methods=["GET","POST"])
+@login_required
+def purchase():
+    cart = []
+    total = 0
+    quantity = 0
+    order = {}
+    form = CheckoutForm()
+    # ucid: sp2927
+    # date: 20 dec 2022
+    paymentMethod = request.form.get('paymentMethod')
+    if paymentMethod == '':
+        flash(f"Payment method has to be selected", "warning")
+        return redirect(url_for('shop.checkout'))
+    if form.validate_on_submit():
+        amountPaid = request.form.get('amount')
+        address = request.form.get('address')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        zipcode = request.form.get('zip')
+
+        try:
+            DB.getDB().autocommit = False # make a transaction
+
+            # get cart to verify
+            
+            result = DB.selectAll("""SELECT c.id, product_id, name, c.quantity, i.stock, c.cost as cart_cost, i.unit_price as product_cost, (c.quantity * c.cost) as subtotal 
+            FROM IS601_S_Cart c JOIN IS601_Products i on c.product_id = i.id
+            WHERE c.user_id = %s
+            """, current_user.get_id())
+            if result.status and result.rows:
+                cart = result.rows
+            has_error = False
+            # ucid: sp2927
+            # date: 20 dec 2022
+            for item in cart:
+                if item["quantity"] > item["stock"]:
+                    flash(f"Product {item['name']} doesn't have enough stock left", "warning")
+                    has_error = True
+                if item["cart_cost"] != item["product_cost"]:
+                    flash(f"Product {item['name']}'s price has changed, please re-add the product to the cart", "warning")
+                    has_error = True
+                total += int(item["subtotal"] or 0)
+                quantity += int(item["quantity"])
+            if not has_error:
+                if total != int(amountPaid):
+                    flash("The amount entered does not match the cart total", "danger")
+                    has_error = True
+            # create order data
+            order_id = -1
+            if not has_error:
+                result = DB.insertOne("""INSERT INTO IS601_S_Orders (
+                    total_price, address, zip, payment_method, money_received, first_name, last_name, user_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", total, address, zipcode, paymentMethod, amountPaid, first_name, last_name, current_user.get_id())
+                if not result.status:
+                    flash("Error generating order", "danger")
+                    DB.getDB().rollback()
+                    has_error = True
+                else:
+                    order_id = int(DB.db.fetch_eof_status()["insert_id"])
+                    order["order_id"] = order_id
+                    order["first_name"] = first_name
+                    order["last_name"] = last_name
+                    order["address"] = address
+                    order["zip"] = zipcode
+                    order["payment_method"] = paymentMethod
+                    order["total_price"] = total
+                    order["money_received"] = amountPaid
+            # record order history
+            if order_id > -1 and not has_error:
+                # Note: Not really an insert 1, it'll copy data from Table B into Table A
+                result = DB.insertOne("""INSERT INTO IS601_S_OrderItems (quantity, cost, order_id, product_id, user_id)
+                SELECT quantity, cost, %s, product_id, user_id FROM IS601_S_Cart c WHERE c.user_id = %s""",
+                order_id, current_user.get_id())
+                if not result.status:
+                    flash("Error recording order history", "danger")
+                    has_error = True
+                    DB.getDB().rollback()
+            # update stock based on cart data
+            if not has_error:
+                result = DB.update("""
+                UPDATE IS601_Products 
+                    set stock = stock - (select IFNULL(quantity, 0) FROM IS601_S_Cart WHERE product_id = IS601_Products.id and user_id = %(uid)s) 
+                    WHERE id in (SELECT product_id from IS601_S_Cart where user_id = %(uid)s)
+                """, {"uid":current_user.get_id()} )
+                if not result.status:
+                    flash("Error updating stock", "danger")
+                    has_error = True
+                    DB.getDB().rollback()
+            
+            # empty the cart
+            if not has_error:
+                result = DB.delete("DELETE FROM IS601_S_Cart WHERE user_id = %s", current_user.get_id())
+                DB.getDB().commit()
+                flash("Purchase successful!", "success")
+            else:
+                return redirect(url_for("shop.cart"))
+        
+        except Exception as e:
+            print("Transaction exception", e)
+            flash("Something went wrong", "danger")
+            traceback.print_exc()
+    else:
+        return redirect(url_for('shop.checkout'))
+        
+    return render_template("order_summary.html", rows=cart, order=order)
+
+
+@shop.route("/orders", methods=["GET"])
+@login_required
+def orders():
+    rows = []
+    try:
+        result = DB.selectAll("""
+        SELECT id,first_name,  total_price, created FROM IS601_S_Orders WHERE user_id = %s
+        """, current_user.get_id())
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error getting orders", e)
+        flash("Error fetching orders", "danger")
+    return render_template("orders.html", rows=rows)
+
+@shop.route("/order", methods=["GET"])
+@login_required
+def order():
+    cart = []
+    order = []
+    id = request.args.get("id")
+    if not id:
+        flash("Invalid order", "danger")
+        return redirect(url_for("shop.orders"))
+    try:
+        result = DB.selectAll("""SELECT oi.id, oi.product_id, oi.quantity, (oi.quantity * oi.cost) as subtotal, p.name
+            FROM IS601_S_OrderItems oi join IS601_Products p on oi.product_id = p.id 
+            WHERE oi.order_id = %s and oi.user_id = %s
+            """, id, current_user.get_id())
+        if result.status and result.rows:
+            cart = result.rows
+
+        result = DB.selectAll("""SELECT id, total_price, address, zip, payment_method, money_received, first_name, last_name, user_id
+        FROM  IS601_S_Orders 
+        WHERE id = %s
+        """, id)
+        if result.status and result.rows:
+            order = result.rows
+    except Exception as e:
+        print("Error getting order", e)
+        flash("Error fetching order", "danger")
+    return render_template("order.html", rows=cart, orders=order)

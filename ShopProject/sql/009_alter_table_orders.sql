@@ -1,0 +1,3 @@
+ALTER TABLE IS601_S_Orders
+ADD
+    COLUMN zip VARCHAR(5);

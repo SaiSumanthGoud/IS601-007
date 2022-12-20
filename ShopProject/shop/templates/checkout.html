@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block title %}Checkout{% endblock %}
+
+<!-- content -->
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="container-fluid">
+    <div class="h3 text-center m-3">Products Pending Purchase</div>
+    <table class="table text-light bg-dark">
+        <thread>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+        </thread>
+        <tbody>
+            {% set ns = namespace(total=0) %}
+            {% for row in rows %}
+            <tr style="vertical-align: middle;">
+                <td>
+                    <a href="{{url_for('shop.productDetails', id=row['product_id'],action='view')}}" style="color: white;">{{row["name"]}}</a>
+                </td>
+                <td style="width:8em">
+                    <input type="number" class="form-control" name="quantity"
+                        value="{{row['quantity']}}"  min="0" readonly/>
+                </td>
+                
+                {% if row['price_change'] | round  == 0 %}
+                    <td>{{row['subtotal']}}</td>
+                {% else %}
+                    <td>{{row['subtotal']}}  <span class="mx-2" style="font-size: 13px; color: goldenrod; line-height: 20px;">price changed by {{ row['price_change'] | round}}% since added to the cart</span></td>
+                {% endif %}
+                {# https://stackoverflow.com/a/51880609 #}
+                {% set ns.total = ns.total + row['subtotal'] %}
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="text-end h3" colspan="100%">
+                    Total: ${{ns.total or 0}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-end">
+        <a href="{{url_for('shop.cart')}}" class="btn btn-primary">Back to Cart</a>
+    </div>
+    <div class="card mx-auto bg-transparent" style="max-width: 500px;">
+        <div class="card-body">
+            <form method="POST" action="{{url_for('shop.purchase')}}">
+                {{ form.hidden_tag() }}
+                {{render_field(form.first_name)}}
+                {{render_field(form.last_name)}}
+                {{render_field(form.address)}}
+                {{render_field(form.zip)}}
+                {{render_field(form.paymentMethod)}}
+                {{render_field(form.amount)}}
+                {{form.submit(class="btn btn-success mt-2 d-block mx-auto")}}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
