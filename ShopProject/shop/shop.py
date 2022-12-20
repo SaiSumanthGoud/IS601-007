@@ -243,6 +243,8 @@ def purchase():
     quantity = 0
     order = {}
     form = CheckoutForm()
+    # ucid: sp2927
+    # date: 20 dec 2022
     paymentMethod = request.form.get('paymentMethod')
     if paymentMethod == '':
         flash(f"Payment method has to be selected", "warning")
@@ -266,6 +268,8 @@ def purchase():
             if result.status and result.rows:
                 cart = result.rows
             has_error = False
+            # ucid: sp2927
+            # date: 20 dec 2022
             for item in cart:
                 if item["quantity"] > item["stock"]:
                     flash(f"Product {item['name']} doesn't have enough stock left", "warning")
@@ -296,9 +300,9 @@ def purchase():
                     order["last_name"] = last_name
                     order["address"] = address
                     order["zip"] = zipcode
-                    order["paymentMethod"] = paymentMethod
-                    order["total"] = total
-                    order["amountPaid"] = amountPaid
+                    order["payment_method"] = paymentMethod
+                    order["total_price"] = total
+                    order["money_received"] = amountPaid
             # record order history
             if order_id > -1 and not has_error:
                 # Note: Not really an insert 1, it'll copy data from Table B into Table A
@@ -337,3 +341,47 @@ def purchase():
         return redirect(url_for('shop.checkout'))
         
     return render_template("order_summary.html", rows=cart, order=order)
+
+
+@shop.route("/orders", methods=["GET"])
+@login_required
+def orders():
+    rows = []
+    try:
+        result = DB.selectAll("""
+        SELECT id,first_name,  total_price, created FROM IS601_S_Orders WHERE user_id = %s
+        """, current_user.get_id())
+        if result.status and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error getting orders", e)
+        flash("Error fetching orders", "danger")
+    return render_template("orders.html", rows=rows)
+
+@shop.route("/order", methods=["GET"])
+@login_required
+def order():
+    cart = []
+    order = []
+    id = request.args.get("id")
+    if not id:
+        flash("Invalid order", "danger")
+        return redirect(url_for("shop.orders"))
+    try:
+        result = DB.selectAll("""SELECT oi.id, oi.product_id, oi.quantity, (oi.quantity * oi.cost) as subtotal, p.name
+            FROM IS601_S_OrderItems oi join IS601_Products p on oi.product_id = p.id 
+            WHERE oi.order_id = %s and oi.user_id = %s
+            """, id, current_user.get_id())
+        if result.status and result.rows:
+            cart = result.rows
+
+        result = DB.selectAll("""SELECT id, total_price, address, zip, payment_method, money_received, first_name, last_name, user_id
+        FROM  IS601_S_Orders 
+        WHERE id = %s
+        """, id)
+        if result.status and result.rows:
+            order = result.rows
+    except Exception as e:
+        print("Error getting order", e)
+        flash("Error fetching order", "danger")
+    return render_template("order.html", rows=cart, orders=order)
