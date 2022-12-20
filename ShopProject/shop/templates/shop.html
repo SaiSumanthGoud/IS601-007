@@ -50,7 +50,7 @@
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">
-                        <a href="{{url_for('shop.productDetails', id=row.get('id'))}}" style="color: white; text-decoration: none;">{{row["name"]}}</a>
+                        <a href="{{url_for('shop.productDetails', id=row.get('id'))}}" style="color: white;">{{row["name"]}}</a>
                     </h5>
                     <p class="card-text">
                         {{row["description"]}}
@@ -60,7 +60,7 @@
                     <h5 class="card-text">
                         Cost: ${{row["unit_price"]}}
                     </h5>
-                    <form action="#" method="POST" class="row row-cols-lg-auto g-0 mt-2" style="justify-content: space-between;">
+                    <form action="{{url_for('shop.cart')}}" method="POST" class="row row-cols-lg-auto g-0 mt-2" style="justify-content: space-between;">
                         <input type="hidden" name="id" value="{{row['id']}}" />
                         <input type="number" class="form-control col-8" name="quantity" value="1" style="flex-basis: 70%;" />
                         <div class="col-3">

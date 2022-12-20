@@ -51,9 +51,7 @@ def product():
             flash("product not found", "danger")
     return render_template("product.html", form=form, type=type)
 
-
 @shop.route("/shop", methods=["GET","POST"])
-@login_required
 def shop_list():
     rows = []
     category_list = []
@@ -124,3 +122,96 @@ def productDetails():
             flash("product not found", "danger")
     return render_template("product.html", row=row, type=type)
 
+@shop.route("/cart", methods=["GET","POST"])
+@login_required
+def cart():
+    product_id = request.form.get("product_id")
+    id = request.form.get("id", product_id)
+    action = request.args.get("action")
+    print("id", id)
+    quantity = request.form.get("quantity", 1, type=int)
+    user_id = current_user.get_id()
+    if action == "clear":
+        try:
+            result = DB.delete("DELETE FROM IS601_S_Cart WHERE user_id = %s", user_id)
+            if result.status:
+                flash("Cart cleared", "success")
+        except Exception as e:
+                    print("Error clearing cart" ,e)
+                    flash("Error clearing cart", "danger")
+    else:
+        if id and user_id:
+            if quantity > 0:
+                try:
+                    result = DB.selectOne("SELECT unit_price,name from IS601_Products WHERE id = %s", id)
+                    print("result", result)
+                    if result.status and result.row:
+                        cost = result.row["unit_price"]
+                        name = result.row["name"]
+                        if product_id: # update from cart
+                            result = DB.insertOne("""
+                            UPDATE IS601_S_Cart SET
+                            quantity = %(quantity)s,
+                            cost = %(cost)s
+                            WHERE product_id = %(id)s and user_id = %(user_id)s
+                            """,{
+                                "id":id,
+                                "quantity": quantity,
+                                "cost":cost,
+                                "user_id":user_id
+                            })
+                            if result.status:
+                                flash(f"Updated quantity for {name} to {quantity}", "success")
+                        else: #add from shop
+                            result = DB.insertOne("""
+                            INSERT INTO IS601_S_Cart (product_id, quantity, cost, user_id)
+                            VALUES(%(id)s, %(quantity)s, %(cost)s, %(user_id)s)
+                            ON DUPLICATE KEY UPDATE
+                            quantity = quantity + %(quantity)s,
+                            cost = %(cost)s
+                            """,{
+                                "id":id,
+                                "quantity": quantity,
+                                "cost":cost,
+                                "user_id":user_id
+                            })
+                            if result.status:
+                                flash(f"Added {quantity} of {name} to cart", "success")
+                except Exception as e:
+                    print("Error updating cart" ,e)
+                    flash("Error updating cart", "danger")
+            else:
+                # assuming delete
+                try:
+                    result = DB.delete("DELETE FROM IS601_S_Cart where product_id = %s and user_id = %s", id, user_id)
+                    if result.status:
+                        flash("Deleted product from cart", "success")
+                except Exception as e:
+                    print("Error deleting product", e)
+                    flash("Error deleting product from cart", "danger")
+    rows = []
+    try:
+        result = DB.selectAll("""SELECT c.id, product_id, name, c.quantity, (c.quantity * c.cost) as subtotal 
+        FROM IS601_S_Cart c JOIN IS601_Products i on c.product_id = i.id
+        WHERE c.user_id = %s
+        """, current_user.get_id())
+        if result and result.rows:
+            rows = result.rows
+    except Exception as e:
+        print("Error getting cart", e)
+        flash("Error fetching cart", "danger")
+    return render_template("cart.html", rows=rows)
+    
+@shop.route("/admin/products/delete", methods=["GET"])
+@admin_permission.require(http_exception=403)
+def delete():
+    id = request.args.get("id")
+    if id:
+        try:
+            result = DB.delete("DELETE FROM IS601_Products WHERE id = %s", id)
+            if result.status:
+                flash("Deleted product", "success")
+        except Exception as e:
+            print("Error deleting product",e)
+            flash("Error deleting product", "danger")
+    return redirect(url_for("shop.product_list"))

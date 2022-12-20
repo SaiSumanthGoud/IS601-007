@@ -36,6 +36,10 @@
                         ] %}
                         {{dropdown_nav("Products", roles)}}
                     {% endif %}
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" style="color: white;" href="{{url_for('shop.shop_list')}}">Shop</a>
+                    </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav">
@@ -47,6 +51,9 @@
                         <a class="btn btn-dark" href="{{url_for('auth.register')}}">Register</a>
                     </li>
                 {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-primary mx-3" href="{{url_for('shop.cart')}}">Cart</a>
+                    <li class="nav-item">
                     <li class="nav-item">
                         <a class="btn btn-danger" href="{{url_for('auth.logout')}}">Logout</a>
                     </li>
