@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Order Confirmation{% endblock %}
+
+<!-- content -->
+{% block content %}
+<div class="container-fluid pb-4">
+    <div class="h4 text-center m-3">Order Confirmation</div>
+    <div class="h5 text-center m-3" style="color: greenyellow;">Thank you, Your order placed successfully!</div>
+    <div class="h2 m-3">Order Summary:</div>
+    <div class="h3 m-3">Order ID: #{{order.order_id}}</div>
+    <div class="h4 mt-5">Address and Billing Details</div>
+    <table class="table text-light bg-dark">
+        <thead>
+            <tr style="border-top: solid;">
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Address</th>
+                <th>Zipcode</th>
+                <th>Payment Method</th>
+                <th>Total Price</th>
+                <th>Amount Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{order['first_name']}}</td>
+                <td>{{order['last_name']}}</td>
+                <td>{{order['address']}}</td>
+                <td>{{order['zip']}}</td>
+                <td>{{order['payment_method']}}</td>
+                <td>{{order['total_price']}}</td>
+                <td>{{order['money_received']}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="h4 mt-5">Ordered Products</div>
+    <table class="table text-light bg-dark">
+        <thread>
+            <tr style="border-top: solid;">
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+        </thread>
+        <tbody>
+            {% set ns = namespace(total=0) %}
+            {% for row in rows %}
+            <tr>
+                <td>{{row["name"]}}</td>
+                <td style="width:10em">
+                    {{row["quantity"]}}
+                </td>
+                <td>{{row['subtotal']}}</td>
+                {# https://stackoverflow.com/a/51880609 #}
+                {% set ns.total = ns.total + row['subtotal'] %}
+            </tr>
+            {% endfor %}
+            <tr>
+                <td class="text-end" colspan="100%">
+                    Total: {{ns.total or 0}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

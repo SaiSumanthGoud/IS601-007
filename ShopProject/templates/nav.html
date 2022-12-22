@@ -14,17 +14,41 @@
                         <a class="nav-link" style="color: white;" href="{{url_for('auth.landing_page')}}">Home</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" style="color: white;" href="{{url_for('shop.shop_list')}}">Shop</a>
+                    </li>
+                    {% if current_user.has_role("Admin") %}
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: white;" href="{{url_for('shop.all_orders')}}">Purchase History</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: white;" href="{{url_for('shop.orders')}}">Purchase History</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
                         <a class="nav-link" style="color: white;" href="{{url_for('auth.profile')}}">Profile</a>
                     </li>
-                    <!-- items nav (requires admin )-->
+                    <!-- roles nav (requires admin )-->
                     {% if current_user.has_role("Admin") %}
                         {% set roles = [
                             ("roles.add", "Add"),
                             ("roles.list", "List"),
                             ("roles.assign", "Assign")
                         ] %}
-                        {{dropdown_nav("Items", roles)}}
+                        {{dropdown_nav("Roles", roles)}}
                     {% endif %}
+                    <!-- items nav (requires admin )-->
+                    {% if current_user.has_role("Admin") %}
+                        {% set roles = [
+                        ("shop.product", "Add"),
+                        ("shop.product_list", "List")
+                        ] %}
+                        {{dropdown_nav("Products", roles)}}
+                    {% endif %}
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" style="color: white;" href="{{url_for('shop.shop_list')}}">Shop</a>
+                    </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav">
@@ -36,6 +60,9 @@
                         <a class="btn btn-dark" href="{{url_for('auth.register')}}">Register</a>
                     </li>
                 {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-primary mx-3" href="{{url_for('shop.cart')}}">Cart</a>
+                    <li class="nav-item">
                     <li class="nav-item">
                         <a class="btn btn-danger" href="{{url_for('auth.logout')}}">Logout</a>
                     </li>

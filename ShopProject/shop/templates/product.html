@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}{{type}} Item{% endblock %}
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="container-fluid">
+    <div class="h3 text-center m-3">{{type}} Product</div>
+    {% if type == "View" %}
+        <div class="">
+            <div class="card text-light bg-dark border" style="display: flex; flex-direction: row;">
+                {% if row["image"] %}
+                    <img src="{{row['image']}}" style="width: 30%;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{row["name"]}}
+                    </h5>
+                    <p class="card-text">
+                        {{row["description"]}}
+                    </p>
+                    <h6>Stock: {{row["stock"]}} left</h6>
+                    <div class="card-footer" style="padding: 0;">
+                        <h5 class="card-text">
+                            Cost: ${{row["unit_price"]}}
+                        </h5>
+                        <form action="#" method="POST" class="row row-cols-lg-auto g-0 mt-2">
+                            <input type="hidden" name="id" value="{{row['id']}}" />
+                            <input type="number" class="form-control col-8" name="quantity" value="1" style="max-width: 150px;" />
+                            <div class="col-3 mx-3">
+                                <input type="submit" value="+Add" class="btn btn-light" />
+                            </div>
+                        </form>
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.has_role("Admin") %}
+                            <form action="{{url_for('shop.product')}}" method="POST">
+                                <input type="hidden" name="id" value="{{row['id']}}" />
+                                <div class="mt-2">
+                                    <a href="{{url_for('shop.product', id=row.get('id'))}}" class="btn btn-primary" style="width: 100%; max-width: 200px;">Edit</a>
+                                </div>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card mx-auto bg-transparent border-light" style="max-width: 500px;">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    {{render_field(form.name)}}
+                    {{render_field(form.description)}}
+                    {{render_field(form.category)}}
+                    {{render_field(form.stock)}}
+                    {{render_field(form.unit_price)}}
+                    {{render_field(form.image)}}
+                    {{render_field(form.visible)}}
+                    {{form.submit(class="btn btn-primary mt-2")}}
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

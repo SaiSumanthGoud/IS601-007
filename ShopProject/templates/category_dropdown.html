@@ -1,0 +1,8 @@
+{# can set val prior to inclusion to prefill this field #}
+<select class="form-select" name="category" value="{{val or ''}}">
+    <option value="">No Category</option>
+    {% for c in cat %}
+    {# example of using external data setting and casting #}
+    <option {{'selected' if val|string==c|string}} value="{{c}}">{{c}}</option>
+    {% endfor %}
+</select>
