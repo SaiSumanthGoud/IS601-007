@@ -18,7 +18,7 @@
                     </li>
                     {% if current_user.has_role("Admin") %}
                         <li class="nav-item">
-                            <a class="nav-link" style="color: white;" href="{{url_for('shop.all_orders')}}">Purchase History</a>
+                            <a class="nav-link" style="color: white;" href="{{url_for('shop.all_orders')}}">Customer Orders</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
