@@ -22,7 +22,7 @@
                         <h5 class="card-text">
                             Cost: ${{row["unit_price"]}}
                         </h5>
-                        <form action="#" method="POST" class="row row-cols-lg-auto g-0 mt-2">
+                        <form action="{{url_for('shop.cart')}}" method="POST" class="row row-cols-lg-auto g-0 mt-2">
                             <input type="hidden" name="id" value="{{row['id']}}" />
                             <input type="number" class="form-control col-8" name="quantity" value="1" style="max-width: 150px;" />
                             <div class="col-3 mx-3">
